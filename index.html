@@ -1,0 +1,1571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sanctions Test Files Generator</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #ffffff;
+    --bg-secondary: #f5f5f4;
+    --bg-tertiary: #eeece8;
+    --text: #1a1a1a;
+    --text-secondary: #6b6b6b;
+    --text-tertiary: #9b9b9b;
+    --border: rgba(0,0,0,0.12);
+    --border-strong: rgba(0,0,0,0.22);
+    --success-bg: #eaf3de;
+    --success-text: #27500a;
+    --warning-bg: #faeeda;
+    --warning-text: #633806;
+    --danger-bg: #fcebeb;
+    --danger-text: #791f1f;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --font: system-ui, -apple-system, sans-serif;
+    --mono: ui-monospace, 'Cascadia Code', monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1e1e1e;
+      --bg-secondary: #2a2a2a;
+      --bg-tertiary: #252525;
+      --text: #e8e8e8;
+      --text-secondary: #aaaaaa;
+      --text-tertiary: #6e6e6e;
+      --border: rgba(255,255,255,0.1);
+      --border-strong: rgba(255,255,255,0.2);
+      --success-bg: #173404;
+      --success-text: #c0dd97;
+      --warning-bg: #412402;
+      --warning-text: #fac775;
+      --danger-bg: #501313;
+      --danger-text: #f7c1c1;
+    }
+  }
+
+  body {
+    font-family: var(--font);
+    font-size: 14px;
+    color: var(--text);
+    background: var(--bg-tertiary);
+    min-height: 100vh;
+    padding: 2rem 1rem;
+  }
+
+  .container { max-width: 740px; margin: 0 auto; }
+  h1 { font-size: 20px; font-weight: 500; margin-bottom: 4px; }
+
+  /* ── Tabs ── */
+  .tabs { display: flex; gap: 4px; margin-bottom: 1.25rem; border-bottom: 0.5px solid var(--border); padding-bottom: 0; }
+  .tab-btn {
+    padding: 7px 16px; font-size: 13px; font-family: var(--font);
+    border: none; background: none; cursor: pointer; color: var(--text-secondary);
+    border-bottom: 2px solid transparent; margin-bottom: -1px; border-radius: 0;
+    transition: color 0.12s;
+  }
+  .tab-btn:hover { color: var(--text); }
+  .tab-btn.active { color: var(--text); font-weight: 500; border-bottom-color: var(--text); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  .meta {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    font-size: 12px; color: var(--text-secondary); margin-bottom: 1.25rem; min-height: 24px;
+  }
+
+  .pill { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 99px; font-size: 11px; font-weight: 500; }
+  .pill-ok   { background: var(--success-bg); color: var(--success-text); }
+  .pill-load { background: var(--warning-bg); color: var(--warning-text); }
+  .pill-err  { background: var(--danger-bg);  color: var(--danger-text);  }
+
+  .cards { display: flex; flex-direction: column; gap: 10px; }
+
+  .card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 1rem 1.25rem; }
+
+  .badge { display: inline-block; font-size: 11px; font-weight: 500; padding: 2px 7px; border-radius: 5px; background: var(--bg-secondary); color: var(--text-secondary); margin-bottom: 6px; }
+  .card-title { font-size: 14px; font-weight: 500; margin-bottom: 4px; }
+  .card-desc { font-size: 12px; color: var(--text-secondary); line-height: 1.55; margin-bottom: 8px; }
+
+  .example {
+    font-size: 11px; font-family: var(--mono); background: var(--bg-secondary);
+    border: 0.5px solid var(--border); border-radius: 5px; padding: 6px 10px;
+    margin-bottom: 12px; line-height: 1.7; color: var(--text-secondary);
+  }
+  .example .hit { color: var(--success-text); }
+
+  .controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .controls label { font-size: 12px; color: var(--text-secondary); }
+
+  select {
+    height: 30px; padding: 0 8px; border-radius: var(--radius-md);
+    border: 0.5px solid var(--border-strong); background: var(--bg); color: var(--text);
+    font-size: 12px; font-family: var(--font); cursor: pointer;
+  }
+
+  button {
+    height: 30px; padding: 0 12px; border-radius: var(--radius-md);
+    border: 0.5px solid var(--border-strong); background: var(--bg); color: var(--text);
+    font-size: 12px; font-family: var(--font); cursor: pointer;
+    display: inline-flex; align-items: center; gap: 5px;
+    transition: opacity 0.12s; white-space: nowrap;
+  }
+  button:hover:not(:disabled) { background: var(--bg-secondary); }
+  button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .btn-gen { background: var(--text); color: var(--bg); border-color: transparent; }
+  .btn-gen:hover:not(:disabled) { opacity: 0.82; background: var(--text); }
+  .btn-dl { background: var(--success-bg); color: var(--success-text); border-color: transparent; display: none; }
+
+  .stat { font-size: 11px; color: var(--text-tertiary); margin-top: 6px; min-height: 16px; }
+
+  .spinner {
+    display: inline-block; width: 12px; height: 12px;
+    border: 1.5px solid var(--border-strong); border-top-color: var(--text);
+    border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  body {
+    font-family: var(--font);
+    font-size: 14px;
+    color: var(--text);
+    background: var(--bg-tertiary);
+    min-height: 100vh;
+    padding: 2rem 1rem;
+  }
+
+  .container {
+    max-width: 740px;
+    margin: 0 auto;
+  }
+
+  h1 {
+    font-size: 20px;
+    font-weight: 500;
+    margin-bottom: 4px;
+  }
+
+  .meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 1.5rem;
+    min-height: 24px;
+  }
+
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 9px;
+    border-radius: 99px;
+    font-size: 11px;
+    font-weight: 500;
+  }
+  .pill-ok   { background: var(--success-bg); color: var(--success-text); }
+  .pill-load { background: var(--warning-bg); color: var(--warning-text); }
+  .pill-err  { background: var(--danger-bg);  color: var(--danger-text);  }
+
+  .cards { display: flex; flex-direction: column; gap: 10px; }
+
+  .card {
+    background: var(--bg);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1rem 1.25rem;
+  }
+
+  .badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 2px 7px;
+    border-radius: 5px;
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+  }
+
+  .card-title {
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 4px;
+  }
+
+  .card-desc {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.55;
+    margin-bottom: 8px;
+  }
+
+  .example {
+    font-size: 11px;
+    font-family: var(--mono);
+    background: var(--bg-secondary);
+    border: 0.5px solid var(--border);
+    border-radius: 5px;
+    padding: 6px 10px;
+    margin-bottom: 12px;
+    line-height: 1.7;
+    color: var(--text-secondary);
+  }
+
+  .example .hit { color: var(--success-text); }
+
+  .controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .controls label {
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+
+  select {
+    height: 30px;
+    padding: 0 8px;
+    border-radius: var(--radius-md);
+    border: 0.5px solid var(--border-strong);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 12px;
+    font-family: var(--font);
+    cursor: pointer;
+  }
+
+  button {
+    height: 30px;
+    padding: 0 12px;
+    border-radius: var(--radius-md);
+    border: 0.5px solid var(--border-strong);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 12px;
+    font-family: var(--font);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: opacity 0.12s;
+    white-space: nowrap;
+  }
+
+  button:hover:not(:disabled) { background: var(--bg-secondary); }
+  button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .btn-gen {
+    background: var(--text);
+    color: var(--bg);
+    border-color: transparent;
+  }
+  .btn-gen:hover:not(:disabled) { opacity: 0.82; background: var(--text); }
+
+  .btn-dl {
+    background: var(--success-bg);
+    color: var(--success-text);
+    border-color: transparent;
+    display: none;
+  }
+
+  .stat {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    margin-top: 6px;
+    min-height: 16px;
+  }
+
+  .spinner {
+    display: inline-block;
+    width: 12px; height: 12px;
+    border: 1.5px solid var(--border-strong);
+    border-top-color: var(--text);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    vertical-align: middle;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Sanctions Test Files Generator</h1>
+
+  <!-- Tab buttons -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('un')">UN Consolidated List</button>
+    <button class="tab-btn" onclick="switchTab('local')">Local 1373 List</button>
+  </div>
+
+  <!-- ══ UN TAB ══════════════════════════════════════════════════════════ -->
+  <div class="tab-panel active" id="tab-un">
+
+    <div class="meta" id="meta">
+      <span class="pill pill-load"><span class="spinner"></span> Waiting for XML file…</span>
+    </div>
+
+    <div id="file-picker" style="background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:1rem 1.25rem;margin-bottom:10px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+      <div style="flex:1;min-width:200px">
+        <div style="font-size:13px;font-weight:500;margin-bottom:3px">Load UN consolidated XML</div>
+        <div style="font-size:12px;color:var(--text-secondary)">Select <code style="font-family:var(--mono);font-size:11px;background:var(--bg-secondary);padding:1px 5px;border-radius:3px">consolidated.xml</code> file — download from <a href="https://scsanctions.un.org/resources/xml/en/consolidated.xml" style="color:inherit">scsanctions.un.org</a> if needed.</div>
+      </div>
+      <label style="cursor:pointer">
+        <input type="file" id="xml-file" accept=".xml" style="display:none" onchange="handleFile(this)">
+        <span style="display:inline-flex;align-items:center;gap:5px;height:30px;padding:0 12px;border-radius:var(--radius-md);border:0.5px solid var(--border-strong);background:var(--bg);font-size:12px;font-family:var(--font);cursor:pointer" onmouseover="this.style.background='var(--bg-secondary)'" onmouseout="this.style.background='var(--bg)'">
+          &#128193; Choose file
+        </span>
+      </label>
+    </div>
+
+    <div class="cards" id="cards"></div>
+
+    <div style="border-top:0.5px solid var(--border);margin:1.5rem 0 1rem"></div>
+
+    <div class="card" id="id-card">
+      <span class="badge">ID List</span>
+      <div class="card-title">Sanctions ID list</div>
+      <div class="card-desc">Extracts all document ID numbers from the XML. Descriptive text (e.g. "Libyan passport No.") is stripped — only the meaningful alphanumeric ID is retained, preserving ID-relevant characters like <code style="font-family:var(--mono);font-size:11px;background:var(--bg-secondary);padding:1px 4px;border-radius:3px">- / \ .</code></div>
+      <div class="example"><span style="color: var(--danger-text)">Sanction:</span>&nbsp;Libyan passport No. 96/184442<br><span style="color: var(--danger-text)">Generated:</span> 96/184442</div>
+      <div class="controls">
+        <button class="btn-gen" id="btn-idlist" onclick="generateIDList()" disabled>&#8595; Generate</button>
+        <button class="btn-dl" id="dl-idlist" onclick="downloadIDList()">&#8595; Download CSV</button>
+      </div>
+      <div class="stat" id="stat-idlist"></div>
+    </div>
+
+  </div><!-- end tab-un -->
+
+  <!-- ══ LOCAL TAB ═══════════════════════════════════════════════════════ -->
+  <div class="tab-panel" id="tab-local">
+
+    <div class="meta" id="local-meta">
+      <span class="pill pill-load"><span class="spinner"></span> Waiting for Excel files…</span>
+    </div>
+
+    <!-- File pickers -->
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:10px">
+
+      <div style="background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:1rem 1.25rem;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <div style="flex:1;min-width:200px">
+          <div style="font-size:13px;font-weight:500;margin-bottom:3px">Individuals Excel file</div>
+          <div style="font-size:12px;color:var(--text-secondary)">Columns used: Reference Number, Name, DL/Passport No., NIC No.</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span id="ind-status" style="font-size:11px;color:var(--text-tertiary)">Not loaded</span>
+          <label style="cursor:pointer">
+            <input type="file" id="ind-file" accept=".xlsx" style="display:none" onchange="handleLocalFile(this,'ind')">
+            <span style="display:inline-flex;align-items:center;gap:5px;height:30px;padding:0 12px;border-radius:var(--radius-md);border:0.5px solid var(--border-strong);background:var(--bg);font-size:12px;font-family:var(--font);cursor:pointer" onmouseover="this.style.background='var(--bg-secondary)'" onmouseout="this.style.background='var(--bg)'">
+              &#128193; Choose file
+            </span>
+          </label>
+        </div>
+      </div>
+
+      <div style="background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:1rem 1.25rem;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <div style="flex:1;min-width:200px">
+          <div style="font-size:13px;font-weight:500;margin-bottom:3px">Entities Excel file</div>
+          <div style="font-size:12px;color:var(--text-secondary)">Columns used: Reference Number, Name, Registration No.</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span id="ent-status" style="font-size:11px;color:var(--text-tertiary)">Not loaded</span>
+          <label style="cursor:pointer">
+            <input type="file" id="ent-file" accept=".xlsx" style="display:none" onchange="handleLocalFile(this,'ent')">
+            <span style="display:inline-flex;align-items:center;gap:5px;height:30px;padding:0 12px;border-radius:var(--radius-md);border:0.5px solid var(--border-strong);background:var(--bg);font-size:12px;font-family:var(--font);cursor:pointer" onmouseover="this.style.background='var(--bg-secondary)'" onmouseout="this.style.background='var(--bg)'">
+              &#128193; Choose file
+            </span>
+          </label>
+        </div>
+      </div>
+
+    </div><!-- end file pickers -->
+
+    <!-- Local list category cards -->
+    <div class="cards" id="local-cards">
+
+      <div class="card">
+        <span class="badge">Local Cat 1</span>
+        <div class="card-title">Exact match — Names</div>
+        <div class="card-desc">One row per name verbatim — primary names and all a.k.a. aliases</div>
+        <div class="example"><span style="color:var(--danger-text)">Sanction:</span>&nbsp;Raman Sinnappa a.k.a Sinnappa Master<br><span class="hit">Generated: Raman Sinnappa / Sinnappa Master (2 rows)</span></div>
+        <div class="controls">
+          <button class="btn-gen" id="btn-lcat1" onclick="generateLocal(1)" disabled>&#8595; Generate</button>
+          <button class="btn-dl" id="dl-lcat1" onclick="downloadLocal(1)">&#8595; Download CSV</button>
+        </div>
+        <div class="stat" id="stat-lcat1"></div>
+      </div>
+
+      <div class="card">
+        <span class="badge">Local Cat 2</span>
+        <div class="card-title">Spelling variants</div>
+        <div class="card-desc">Common misspellings — vowel changes, doubled or dropped letters, similar-sounding letter substitutions.</div>
+        <div class="example"><span style="color:var(--danger-text)">Sanction:</span>&nbsp;Raman Sinnappa<br><span class="hit">Generated: Remen Sinnappa / Raman Sinnapa (2 rows)</span></div>
+        <div class="controls">
+          <label>Variants per name</label>
+          <select id="sel-lcat2"><option>1</option><option>2</option><option>3</option><option>4</option><option selected>5</option></select>
+          <button class="btn-gen" id="btn-lcat2" onclick="generateLocal(2)" disabled>&#8595; Generate</button>
+          <button class="btn-dl" id="dl-lcat2" onclick="downloadLocal(2)">&#8595; Download CSV</button>
+        </div>
+        <div class="stat" id="stat-lcat2"></div>
+      </div>
+
+      <div class="card">
+        <span class="badge">Local Cat 3</span>
+        <div class="card-title">Name order transposed</div>
+        <div class="card-desc">Tokens of the name rearranged in a different order, with a slight spelling variation.</div>
+        <div class="example"><span style="color:var(--danger-text)">Sanction:</span>&nbsp;Dharmalingam Jeyanthan<br><span class="hit">Generated: Jeyanthen Dharmalingam</span></div>
+        <div class="controls">
+          <label>Variants per name</label>
+          <select id="sel-lcat3"><option>1</option><option>2</option><option>3</option><option>4</option><option selected>5</option></select>
+          <button class="btn-gen" id="btn-lcat3" onclick="generateLocal(3)" disabled>&#8595; Generate</button>
+          <button class="btn-dl" id="dl-lcat3" onclick="downloadLocal(3)">&#8595; Download CSV</button>
+        </div>
+        <div class="stat" id="stat-lcat3"></div>
+      </div>
+
+      <div class="card">
+        <span class="badge">Local Cat 4</span>
+        <div class="card-title">Partial names</div>
+        <div class="card-desc">Drops one or more tokens from a name — e.g. surname only, or first and last name without the middle. Only applies to names with 3 or more token</div>
+        <div class="example"><span style="color:var(--danger-text)">Sanction:</span>&nbsp;Sanmuga Sundaram Kanthaskaran<br><span class="hit">Generated: Sundaram Kanthaskaran</span></div>
+        <div class="controls">
+          <label>Variants per name</label>
+          <select id="sel-lcat4"><option>1</option><option>2</option><option>3</option><option>4</option><option selected>5</option></select>
+          <button class="btn-gen" id="btn-lcat4" onclick="generateLocal(4)" disabled>&#8595; Generate</button>
+          <button class="btn-dl" id="dl-lcat4" onclick="downloadLocal(4)">&#8595; Download CSV</button>
+        </div>
+        <div class="stat" id="stat-lcat4"></div>
+      </div>
+
+      <div class="card">
+        <span class="badge">Local Cat 5</span>
+        <div class="card-title">Diacritics / special chars</div>
+        <div class="card-desc">Normalized versions of all names including aliases containing apostrophes, hyphens, or other special characters.</div>
+        <div class="example"><span style="color:var(--danger-text)">Sanction:</span>&nbsp;Jama'ath Millathe Ibrahim<br><span class="hit">Generated: Jamaath Millathe Ibrahim</span></div>
+        <div class="controls">
+          <button class="btn-gen" id="btn-lcat5" onclick="generateLocal(5)" disabled>&#8595; Generate</button>
+          <button class="btn-dl" id="dl-lcat5" onclick="downloadLocal(5)">&#8595; Download CSV</button>
+        </div>
+        <div class="stat" id="stat-lcat5"></div>
+      </div>
+
+      <div style="border-top:0.5px solid var(--border);margin:1.5rem 0 1rem"></div>
+
+      <div class="card">
+        <span class="badge">Local ID List</span>
+        <div class="card-title">ID match — Individuals</div>
+        <div class="card-desc">Extracts DL/Passport and NIC numbers from the Individuals file. Multiple IDs per row are split. NA values and descriptive text are stripped.</div>
+        <div class="example"><span style="color:var(--danger-text)">Sanction:</span>&nbsp;N 1918865, M 1764800<br><span class="hit">Generated: N1918865 / M1764800 (2 rows)</span></div>
+        <div class="controls">
+          <button class="btn-gen" id="btn-lidlist" onclick="generateLocal('id')" disabled>&#8595; Generate</button>
+          <button class="btn-dl" id="dl-lidlist" onclick="downloadLocal('id')">&#8595; Download CSV</button>
+        </div>
+        <div class="stat" id="stat-lidlist"></div>
+      </div>
+
+    </div><!-- end local-cards -->
+
+  </div><!-- end tab-local -->
+
+</div>
+<script>
+/* ─────────────────────────────────────────────
+   HIGH FREQUENCY NAMES (from name_matching_core)
+───────────────────────────────────────────── */
+const HIGH_FREQ = new Set(['abbas','abd','abdal','abdalla','abdallah','abdallahi','abdel','abdellah','abdoul','abdu','abdul','abdulah','abdulazeez','abdulazhar','abdulazim','abdulaziz','abdulbasir','abdulbasit','abdulfattah','abdulghani','abdulhadi','abdulhafeez','abdulhakeem','abdulhameed','abdulhamid','abduljabbar','abduljaleel','abdulkadir','abdulkarim','abdullah','abdullahi','abdulmajid','abdulmalik','abdulmohsin','abdulqadir','abdulqayyum','abdulraheem','abdulrahim','abdulrahman','abdulrasheed','abdulrauf','abdulrazak','abdulrazzaq','abdulsalam','abdulsattar','abdulwahab','abdulwahid','abou','abu','addin','adil','adnan','aga','agha','ahamed','ahmad','ahmat','ahmed','ahmmad','ahmod','akhtar','akram','al','aldeen','aldin','ali','allah','alrahman','aly','ameen','ameer','amin','amir','amyn','anwar','arif','arshad','ashraf','asif','aziz','bakr','baser','basharat','bashir','basir','ben','bilal','bin','bint','danish','ebraheim','ebrahim','eddin','ehsan','el','emir','esmail','faisal','faizan','farhan','farid','faris','farooq','feroz','ghulam','gul','habeeb','habib','hacen','hadji','haider','haj','haji','hajji','hamad','hamdan','hameed','hamid','haris','haroon','hasan','hassan','hassane','hassen','hossein','husain','husein','hussain','hussein','ibn','ibraheem','ibraheim','ibrahim','il','imad','imran','iqbal','irfan','ismaeel','ismaeil','ismael','ismail','jamal','jan','javed','jawad','junaid','kamran','kareem','karim','khaled','khalid','khalil','khan','latif','luqman','mahdi','mahmod','mahmood','mahmoud','mahmud','mahommed','majid','mazhar','mehdi','mehmed','mehmet','mhamed','mirza','mohamad','mohamed','mohammad','mohammed','mohammod','mohomed','mohommed','mohsen','mohsin','mostafa','mouhamed','moussa','moustafa','muhamad','muhamed','muhammad','muhammadu','muhammed','muhsen','munir','musa','mustafa','nabil','nadeem','nadeer','naeem','naim','naseem','naseer','naser','nasir','nasr','nasser','nassir','naveed','nizam','noman','noor','nour','nur','oddin','omar','omer','oumar','owais','parvez','pervez','qasim','rafiq','rahim','rahman','rashid','rehman','reza','riaz','saad','saeed','saeid','said','sajid','salah','salahi','saleem','saleh','salem','salih','salihu','salim','sameer','sayed','sayid','sayyed','sayyid','selim','shah','shahid','shaikh','shakir','shams','sharif','sheikh','shoaib','soliman','sulaiman','sulayman','suleiman','suleyman','sultan','syed','taha','taher','tahha','tahir','talha','tanveer','tariq','uddin','ul','ulla','ullah','umar','waheed','wahid','wali','waly','yahia','yahya','yaseen','yasir','yehia','yosef','yousef','youssef','yousuf','yusof','yusuf','zafar','zahid','zain','zubair','zuberi']);
+
+/* ─────────────────────────────────────────────
+   CATEGORY DEFINITIONS
+───────────────────────────────────────────── */
+const CATS = [
+  { id: 1,  label: 'Cat 1',  title: 'Exact match',               hasVariants: false,
+    desc: 'One row per name verbatim — primary names and good-quality aliases. Non-Latin script entries excluded.',
+    example: '<span style="color: var(--danger-text)">Sanction:</span>&nbsp;JALALUDDIN HAQQANI<br><span class="hit"><span style="color: var(--danger-text)">Generated:</span> JALALUDDIN HAQQANI</span>' },
+  { id: 2,  label: 'Cat 2',  title: 'Spelling variants',          hasVariants: true,
+    desc: 'Common misspellings — vowel changes, doubled or dropped letters, similar-sounding letter substitutions. Primary names only',
+    example: '<span style="color: var(--danger-text)">Sanction:</span>&nbsp;JALALUDDIN HAQQANI<br><span class="hit"><span style="color: var(--danger-text)">Generated:</span> JELALUDDIN HAQANI</span>' },
+  { id: 3,  label: 'Cat 3',  title: 'Name order transposed',      hasVariants: true,
+    desc: 'Tokens of the name rearranged in a different order, with a slight spelling variation.',
+    example: '<span style="color: var(--danger-text)">Sanction</span>&nbsp;FRANK KAKOLELE BWAMBALE<br><span class="hit"><span style="color: var(--danger-text)">Generated:</span> BWAMBALI KAKOLELE FRANK</span>' },
+  { id: 4,  label: 'Cat 4',  title: 'Partial names',              hasVariants: true,
+    desc: 'Drops one or more tokens from a name — e.g. surname only, or first and last name without the middle. Only applies to names with 3 or more tokens.',
+    example: '<span style="color: var(--danger-text)">Sanction:</span>&nbsp;IBRAHIM HASSAN TALI AL ASIRI<br><span class="hit"><span style="color: var(--danger-text)">Generated:</span> TALI AL ASIRI</span>' },
+  { id: 5,  label: 'Cat 5',  title: 'Diacritics / special chars', hasVariants: false,
+    desc: 'Normalized versions of names containing accents, hyphens, or apostrophes — as would be typed from a passport or document.',
+    example: '<span style="color: var(--danger-text)">Sanction:</span>&nbsp;JEAN-MARIE LUGERERO RUNIGA<br><span class="hit"><span style="color: var(--danger-text)">Generated:</span> JEAN MARIE LUGERERO RUNIGA</span>' },
+];
+
+/* ─────────────────────────────────────────────
+   STATE
+───────────────────────────────────────────── */
+let sanctionsData = null;
+const csvStore = {};
+
+/* ─────────────────────────────────────────────
+   RENDER CARDS
+───────────────────────────────────────────── */
+function renderCards() {
+  document.getElementById('cards').innerHTML = CATS.map(c => `
+    <div class="card">
+      <span class="badge">${c.label}</span>
+      <div class="card-title">${c.title}</div>
+      <div class="card-desc">${c.desc}</div>
+      <div class="example">${c.example}</div>
+      <div class="controls">
+        ${c.hasVariants ? `<label>Variants per name</label>
+        <select id="sel-${c.id}">
+          <option>1</option><option>2</option><option>3</option><option>4</option><option selected>5</option>
+        </select>` : ''}
+        <button class="btn-gen" id="btn-${c.id}" onclick="generate(${c.id})" disabled>
+          &#8595; Generate
+        </button>
+        <button class="btn-dl" id="dl-${c.id}" onclick="download(${c.id})">
+          &#8595; Download CSV
+        </button>
+      </div>
+      <div class="stat" id="stat-${c.id}"></div>
+    </div>
+  `).join('');
+}
+
+/* ─────────────────────────────────────────────
+   LOAD UN XML — file picker (UN server blocks browser fetch)
+───────────────────────────────────────────── */
+function handleFile(input) {
+  const file = input.files[0];
+  if (!file) return;
+  document.getElementById('meta').innerHTML =
+    `<span class="pill pill-load"><span class="spinner"></span> Parsing ${file.name}…</span>`;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      parseXML(e.target.result);
+      document.getElementById('file-picker').style.display = 'none';
+    } catch (err) {
+      document.getElementById('meta').innerHTML =
+        `<span class="pill pill-err">&#9888; Parse error: ${err.message}</span>`;
+    }
+  };
+  reader.onerror = () => {
+    document.getElementById('meta').innerHTML =
+      `<span class="pill pill-err">&#9888; Could not read file</span>`;
+  };
+  reader.readAsText(file);
+}
+
+function isNonLatin(n) { return /[^\x00-\x7F\-\s'.,()]/.test(n); }
+
+function normName(n) {
+  n = n.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  n = n.replace(/-/g, ' ').replace(/[^a-zA-Z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim().toUpperCase();
+  return n;
+}
+
+function parseXML(txt) {
+  const doc = new DOMParser().parseFromString(txt, 'text/xml');
+  const root = doc.documentElement;
+  const dateRaw = root.getAttribute('dateGenerated') || '';
+  const dateStr = dateRaw
+    ? new Date(dateRaw).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+    : 'Unknown';
+
+  const getT = (el, tag) => { const n = el.querySelector(tag); return n ? (n.textContent || '').trim() : ''; };
+  const names = [];
+  const ids = [];
+
+  doc.querySelectorAll('INDIVIDUAL').forEach(ind => {
+    const ref = getT(ind, 'REFERENCE_NUMBER');
+    const full = ['FIRST_NAME','SECOND_NAME','THIRD_NAME','FOURTH_NAME']
+      .map(t => getT(ind, t)).filter(Boolean).join(' ').trim();
+    if (full && ref && !isNonLatin(full)) names.push({ name: full, ref, type: 'Primary' });
+    ind.querySelectorAll('INDIVIDUAL_ALIAS').forEach(a => {
+      const q = getT(a, 'QUALITY'), n = getT(a, 'ALIAS_NAME');
+      if (n && q === 'Good' && !isNonLatin(n)) names.push({ name: n, ref, type: 'Alias' });
+    });
+    ind.querySelectorAll('INDIVIDUAL_DOCUMENT').forEach(doc => {
+      const num = getT(doc, 'NUMBER');
+      if (num) ids.push({ ref, raw: num });
+    });
+  });
+
+  doc.querySelectorAll('ENTITY').forEach(ent => {
+    const ref = getT(ent, 'REFERENCE_NUMBER'), full = getT(ent, 'FIRST_NAME');
+    if (full && ref && !isNonLatin(full)) names.push({ name: full, ref, type: 'Primary' });
+    ent.querySelectorAll('ENTITY_ALIAS').forEach(a => {
+      const q = getT(a, 'QUALITY'), n = getT(a, 'ALIAS_NAME');
+      if (n && (q === 'a.k.a.' || q === 'f.k.a.') && !isNonLatin(n)) names.push({ name: n, ref, type: 'Alias' });
+    });
+    ent.querySelectorAll('ENTITY_DOCUMENT').forEach(doc => {
+      const num = getT(doc, 'NUMBER');
+      if (num) ids.push({ ref, raw: num });
+    });
+  });
+
+  sanctionsData = { names, ids, dateStr };
+  const primary = names.filter(r => r.type === 'Primary').length;
+
+  document.getElementById('meta').innerHTML =
+    `<span class="pill pill-ok">&#10003; List loaded</span>` +
+    `<span>List date: <strong>${dateStr}</strong></span>` +
+    `<span>${names.length.toLocaleString()} names &nbsp;·&nbsp; ${primary.toLocaleString()} primary</span>`;
+
+  CATS.forEach(c => {
+    const b = document.getElementById('btn-' + c.id);
+    if (b) b.disabled = false;
+  });
+  const bid = document.getElementById('btn-idlist');
+  if (bid) bid.disabled = false;
+}
+
+/* ─────────────────────────────────────────────
+   CSV HELPERS
+───────────────────────────────────────────── */
+function csvEsc(v) {
+  v = String(v || '');
+  if (v.includes(',') || v.includes('"') || v.includes('\n')) return '"' + v.replace(/"/g, '""') + '"';
+  return v;
+}
+
+function toCSV(rows) {
+  const fields = ['#', 'Category', 'CustomerName', 'SanctionRef', 'SanctionName'];
+  return [fields.join(','), ...rows.map(r => fields.map(k => csvEsc(r[k])).join(','))].join('\r\n');
+}
+
+function mkRow(seq, cat, name, ref, orig) {
+  return { '#': seq, Category: cat, CustomerName: name, SanctionRef: ref, SanctionName: orig };
+}
+
+function download(id) {
+  const csv = csvStore[id]; if (!csv) return;
+  const nm = { 1:'Cat1_Exact_Match', 2:'Cat2_Spelling_Variant', 3:'Cat3_Transposed', 4:'Cat4_Partial_Name', 5:'Cat5_Diacritics' };
+  const b = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(b);
+  a.download = 'UN_Sanctions_' + nm[id] + '.csv'; a.click();
+}
+
+/* ─────────────────────────────────────────────
+   GENERATE DISPATCHER
+───────────────────────────────────────────── */
+function generate(id) {
+  if (!sanctionsData) return;
+  const btn = document.getElementById('btn-' + id);
+  btn.disabled = true; btn.textContent = 'Generating…';
+  document.getElementById('stat-' + id).textContent = '';
+
+  setTimeout(() => {
+    try {
+      const maxVar = (id === 1 || id === 5) ? 999 : parseInt(document.getElementById('sel-' + id).value) || 5;
+      let rows;
+      if      (id === 1)  rows = gen1();
+      else if (id === 2)  rows = gen2(maxVar);
+      else if (id === 3)  rows = gen3(maxVar);
+      else if (id === 4)  rows = gen4(maxVar);
+      else if (id === 5)  rows = gen5();
+      csvStore[id] = toCSV(rows);
+      document.getElementById('stat-' + id).textContent = rows.length.toLocaleString() + ' rows generated';
+      const dlBtn = document.getElementById('dl-' + id);
+      dlBtn.style.display = 'inline-flex';
+    } catch (e) {
+      document.getElementById('stat-' + id).textContent = 'Error: ' + e.message;
+    }
+    btn.disabled = false; btn.textContent = 'Regenerate';
+  }, 10);
+}
+
+/* ─────────────────────────────────────────────
+   FUZZY SCORING ENGINE
+   Mirrors evaluate_rules() in fuzzy_match_service.py
+   + scorer.py + name_matching_core
+───────────────────────────────────────────── */
+const VOWELS = 'aeiou';
+const VC = { a:'e', e:'i', i:'a', o:'u', u:'o' };
+
+function fRatio(a, b) {
+  if (a === b) return 100;
+  if (!a.length || !b.length) return 0;
+  const m = editSim(a, b);
+  return Math.round(2 * m / (a.length + b.length) * 100);
+}
+
+function editSim(a, b) {
+  let prev = Array.from({ length: b.length + 1 }, (_, i) => i);
+  for (let i = 1; i <= a.length; i++) {
+    const curr = [i];
+    for (let j = 1; j <= b.length; j++)
+      curr[j] = a[i-1] === b[j-1] ? prev[j-1] : 1 + Math.min(prev[j], curr[j-1], prev[j-1]);
+    prev = curr;
+  }
+  return Math.max(a.length, b.length) - prev[b.length];
+}
+
+function tokenSetRatio(a, b) {
+  const sa = new Set(a.split(' ').filter(Boolean));
+  const sb = new Set(b.split(' ').filter(Boolean));
+  if (!sa.size || !sb.size) return 0;
+  const inter = [...sa].filter(t => sb.has(t)).sort().join(' ');
+  const onA   = [...sa].filter(t => !sb.has(t)).sort().join(' ');
+  const onB   = [...sb].filter(t => !sa.has(t)).sort().join(' ');
+  const t1 = (inter + ' ' + onA).trim();
+  const t2 = (inter + ' ' + onB).trim();
+  return Math.max(fRatio(inter, t1), fRatio(inter, t2), fRatio(t1, t2));
+}
+
+function scoreDir(tokA, tokB) {
+  let tot = 0, wt = 0;
+  tokA.forEach(ta => {
+    const w = HIGH_FREQ.has(ta) ? ta.length * 0.4 : ta.length;
+    let best = 0;
+    tokB.forEach(tb => { const s = fRatio(ta, tb); if (s > best) best = s; });
+    tot += best * w; wt += w;
+  });
+  return wt ? tot / wt : 0;
+}
+
+function naiveScore(a, b) {
+  const r = tokenSetRatio(a, b);
+  if (r < 45) return r;
+  const at = a.split(' ').filter(Boolean), bt = b.split(' ').filter(Boolean);
+  const base = (scoreDir(at, bt) + scoreDir(bt, at)) / 2;
+  const diff = Math.abs(at.length - bt.length);
+  const sT = at.length <= bt.length ? at : bt;
+  const lT = at.length <= bt.length ? bt : at;
+  const isSub = sT.every(t => lT.includes(t));
+  const pen = isSub ? Math.min(diff * 2, 8) : diff * 4;
+  return Math.max(0, Math.round(base - pen));
+}
+
+function discPen(at, bt) {
+  if (at.length < 2 || bt.length < 2) return 0;
+  let p = 0;
+  at.forEach(t => {
+    if (HIGH_FREQ.has(t) || t.length <= 3) return;
+    const best = Math.max(...bt.map(b => fRatio(t, b)));
+    if (best < 62) p += 25;
+  });
+  return p;
+}
+
+function lenOk(at, bt) {
+  const la = at.join('').length, lb = bt.join('').length;
+  const sT = at.length <= bt.length ? at : bt;
+  const lT = at.length <= bt.length ? bt : at;
+  const isSub = sT.every(t => lT.includes(t));
+  return Math.abs(la - lb) <= Math.max(la, lb) * (isSub ? 0.65 : 0.5);
+}
+
+function prep(s) {
+  return s.toLowerCase().replace(/-/g, ' ').replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
+function fullSim(search, db, thr = 75) {
+  const a = prep(search), b = prep(db);
+  if (a.replace(/\s/g,'') === b.replace(/\s/g,'')) return 100;
+  const at = a.split(' ').filter(Boolean), bt = b.split(' ').filter(Boolean);
+  const n = Math.min(at.length, bt.length);
+
+  if (n >= 3) {
+    const sT = at.length <= bt.length ? at : bt;
+    const lT = at.length <= bt.length ? bt : at;
+    const req = n > 5 ? n - 2 : n - 1;
+    const used = new Set(); let m = 0;
+    sT.forEach(t => {
+      let bs = 0, bi = -1;
+      lT.forEach((t2, i) => { if (!used.has(i)) { const s = fRatio(t, t2); if (s > bs) { bs = s; bi = i; } } });
+      if (bi >= 0 && bs >= 80) { used.add(bi); m++; }
+    });
+    if (m >= req) {
+      const raw = naiveScore(a, b), p = discPen(at, bt), f = raw - p;
+      if (f >= thr) return f;
+    }
+  }
+
+  if (Math.max(at.length, bt.length) <= 2) {
+    const rf = fRatio(a, b);
+    const thr3 = at.length === 1 && bt.length === 1 ? 90 : at.length === 2 && bt.length === 2 ? 80 : 88;
+    if (rf >= thr3) {
+      const p = discPen(at, bt), f = rf - p;
+      if (f >= thr) return f;
+    }
+  }
+
+  const rp = tokenSetRatio(a, b); if (rp < 50) return 0;
+  if (!lenOk(at, bt)) return 0;
+  const raw = naiveScore(a, b), p = discPen(at, bt), f = raw - p;
+  return f >= thr ? f : 0;
+}
+
+/* ─────────────────────────────────────────────
+   MUTATORS (spelling / OCR)
+───────────────────────────────────────────── */
+function vswap(t, idx = 0) {
+  let c = 0;
+  for (let i = 0; i < t.length; i++) {
+    if (VOWELS.includes(t[i])) { if (c === idx) return t.slice(0,i) + VC[t[i]] + t.slice(i+1); c++; }
+  }
+  return t;
+}
+function dropDbl(t) { let r = ''; for (let i = 0; i < t.length; i++) { if (i>0 && t[i]===t[i-1] && !VOWELS.includes(t[i])) continue; r += t[i]; } return r; }
+function addDbl(t)  { for (let i = 1; i < t.length; i++) { if (!VOWELS.includes(t[i]) && t[i-1]!==t[i]) return t.slice(0,i+1)+t[i]+t.slice(i+1); } return t; }
+function endCh(t)   { if (t.endsWith('i')&&t.length>4) return t.slice(0,-1)+'y'; if (t.endsWith('a')&&t.length>4) return t+'h'; if (t.endsWith('e')&&t.length>4) return t.slice(0,-1)+'i'; if (t.length>3) return t+t[t.length-1]; return t; }
+function ckSw(t)    { if (t.includes('q')) return t.replace('q','k'); if (t.includes('kh')) return t.replace('kh','h'); if (t.includes('k')) return t.replace('k','c'); if (t.includes('c')) return t.replace('c','k'); return t; }
+function insV(t)    { for (let i=t.length-1;i>0;i--) { if (!VOWELS.includes(t[i])&&!VOWELS.includes(t[i-1])) return t.slice(0,i)+'a'+t.slice(i); } return t+'i'; }
+
+const SPELL_MUTS = [vswap, dropDbl, addDbl, endCh, ckSw, insV, t => vswap(t, 1)];
+
+function transp(t) { for (let i=1;i<t.length-1;i++) { if(t[i]!==t[i+1]) return t.slice(0,i)+t[i+1]+t[i]+t.slice(i+2); } return t; }
+function subst(t)  { const m={a:'s',s:'a',e:'r',r:'e',i:'u',u:'i',o:'p',n:'m',m:'n',h:'j',j:'h',k:'l',l:'k',q:'w',w:'q',b:'v',v:'b',d:'f',f:'d',g:'h',t:'y',y:'t',c:'v',x:'z',z:'x'}; for(let i=0;i<t.length;i++){if(m[t[i]])return t.slice(0,i)+m[t[i]]+t.slice(i+1);}return t; }
+function dblWr(t)  { for(let i=1;i<t.length;i++){if(!VOWELS.includes(t[i])&&t[i]!==t[i-1])return t.slice(0,i+1)+t[i]+t.slice(i+1);}return t; }
+function dropC(t)  { for(let i=1;i<t.length-1;i++){if(!VOWELS.includes(t[i]))return t.slice(0,i)+t.slice(i+1);}return t; }
+
+const OCR_MUTS = [transp, subst, dblWr, dropC, vswap, t => vswap(t, 1)];
+
+/* ─────────────────────────────────────────────
+   CAT 1 — EXACT MATCH
+───────────────────────────────────────────── */
+function gen1() {
+  return sanctionsData.names.map((r, i) => mkRow(i+1, '1 - Exact Match', r.name, r.ref, r.name));
+}
+
+/* ─────────────────────────────────────────────
+   CAT 5 — DIACRITICS / SPECIAL CHARS
+───────────────────────────────────────────── */
+function gen5() {
+  const rows = []; let s = 1;
+  sanctionsData.names.filter(r => r.type === 'Primary').forEach(r => {
+    const n = normName(r.name);
+    if (n !== r.name.toUpperCase() && n.trim().length > 2)
+      rows.push(mkRow(s++, '5 - Diacritics/Special Chars', n, r.ref, r.name));
+  });
+  return rows;
+}
+
+/* ─────────────────────────────────────────────
+   CAT 2 — SPELLING VARIANTS
+───────────────────────────────────────────── */
+function gen2(maxVar) {
+  const rows = []; let seq = 1;
+  sanctionsData.names
+    .filter(r => r.type === 'Primary' && r.name.split(' ').filter(Boolean).length >= 2)
+    .forEach(r => {
+      const toks = r.name.toLowerCase().split(' ').filter(Boolean);
+      const seen = new Set([r.name.toLowerCase()]);
+      const thr  = r.name.length <= 4 ? 80 : 75;
+      const variants = [];
+
+      const strats = [
+        t => { const c=[...t]; c[0]=vswap(c[0]); return c[0]!==toks[0]?c:null; },
+        t => { const c=[...t]; c[c.length-1]=vswap(c[c.length-1]); return c[c.length-1]!==toks[toks.length-1]?c:null; },
+        t => { const c=t.map(dropDbl); return c.join('|')!==t.join('|')?c:null; },
+        t => { const c=[...t]; for(let i=c.length-1;i>=0;i--){if(!HIGH_FREQ.has(c[i])){const n=addDbl(c[i]);if(n!==c[i]){c[i]=n;return c;}}} return null; },
+        t => { const c=t.map(ckSw); return c.join('|')!==t.join('|')?c:null; },
+        t => { const c=[...t]; for(let i=c.length-1;i>=0;i--){if(c[i].length>3){const n=endCh(c[i]);if(n!==c[i]){c[i]=n;return c;}}} return null; },
+        t => { const c=[...t]; c[0]=vswap(c[0],1); return c[0]!==toks[0]?c:null; },
+        t => { if(t.length<2)return null; const c=[...t]; c[1]=vswap(c[1]); return c[1]!==toks[1]?c:null; },
+        t => { const c=[...t]; c[c.length-1]=insV(c[c.length-1]); return c[c.length-1]!==toks[toks.length-1]?c:null; },
+      ];
+
+      for (const s of strats) {
+        if (variants.length >= maxVar) break;
+        const res = s(toks); if (!res) continue;
+        const v = res.join(' ').toUpperCase();
+        if (seen.has(v.toLowerCase())) continue;
+        if (fullSim(v, r.name, thr) >= thr) { seen.add(v.toLowerCase()); variants.push(v); }
+      }
+
+      if (variants.length < maxVar) {
+        const nl = r.name.toLowerCase();
+        for (const [a, b] of [['a','e'],['e','i'],['i','a'],['o','u'],['n','m'],['s','z']]) {
+          if (variants.length >= maxVar) break;
+          for (let i = 0; i < nl.length; i++) {
+            if (nl[i] === a) {
+              const v = (nl.slice(0,i)+b+nl.slice(i+1)).toUpperCase();
+              if (!seen.has(v.toLowerCase()) && fullSim(v, r.name, thr) >= thr) {
+                seen.add(v.toLowerCase()); variants.push(v); break;
+              }
+            }
+          }
+        }
+      }
+
+      variants.forEach(v => rows.push(mkRow(seq++, '2 - Spelling Variant', v, r.ref, r.name)));
+    });
+  return rows;
+}
+
+/* ─────────────────────────────────────────────
+   CAT 3 — NAME ORDER TRANSPOSED
+───────────────────────────────────────────── */
+function gen3(maxVar) {
+  const rows = []; let seq = 1;
+  sanctionsData.names
+    .filter(r => r.type === 'Primary' && r.name.split(' ').filter(Boolean).length >= 2)
+    .forEach(r => {
+      const toks = r.name.toLowerCase().split(' ').filter(Boolean);
+      const seen = new Set([r.name.toLowerCase()]);
+      const thr  = r.name.length <= 4 ? 80 : 75;
+      const variants = [];
+
+      const trans = [];
+      const rev = [...toks].reverse(); if (rev.join('|') !== toks.join('|')) trans.push(rev);
+      if (toks.length >= 2) { const c=[...toks];[c[0],c[1]]=[c[1],c[0]]; if(c.join('|')!==toks.join('|'))trans.push(c); }
+      if (toks.length >= 3) { trans.push([...toks.slice(1),toks[0]]); trans.push([toks[toks.length-1],...toks.slice(0,-1)]); }
+
+      for (const tr of trans) {
+        if (variants.length >= maxVar) break;
+        const dI = tr.map((t,i) => HIGH_FREQ.has(t)||t.length<=3?-1:i).filter(i=>i>=0);
+        const idxs = dI.length ? dI : tr.map((_,i)=>i);
+
+        for (const i of idxs) {
+          if (variants.length >= maxVar) break;
+          for (const j of idxs) {
+            if (i===j || variants.length>=maxVar) continue;
+            for (const f1 of SPELL_MUTS) {
+              if (variants.length >= maxVar) break;
+              for (const f2 of SPELL_MUTS) {
+                const c=[...tr]; c[i]=f1(tr[i]); c[j]=f2(tr[j]);
+                if (c[i]===tr[i]||c[j]===tr[j]) continue;
+                const v = c.join(' ').toUpperCase();
+                if (!seen.has(v.toLowerCase())) {
+                  const s = fullSim(v, r.name, thr);
+                  if (s>=thr && s<=98) { seen.add(v.toLowerCase()); variants.push(v); break; }
+                }
+              }
+            }
+          }
+        }
+
+        for (const i of idxs) {
+          if (variants.length >= maxVar) break;
+          for (const fn of SPELL_MUTS) {
+            const c=[...tr]; c[i]=fn(tr[i]); if(c[i]===tr[i]) continue;
+            const v = c.join(' ').toUpperCase();
+            if (!seen.has(v.toLowerCase())) {
+              const s = fullSim(v, r.name, thr);
+              if (s>=thr && s<=98) { seen.add(v.toLowerCase()); variants.push(v); break; }
+            }
+          }
+        }
+      }
+
+      variants.forEach(v => rows.push(mkRow(seq++, '3 - Name Order Transposed', v, r.ref, r.name)));
+    });
+  return rows;
+}
+
+/* ─────────────────────────────────────────────
+   CAT 4 — PARTIAL NAMES
+───────────────────────────────────────────── */
+function gen4(maxVar) {
+  const rows = []; let seq = 1;
+  sanctionsData.names
+    .filter(r => r.type === 'Primary' && r.name.split(' ').filter(Boolean).length >= 2)
+    .forEach(r => {
+      const toks = r.name.toLowerCase().split(' ').filter(Boolean);
+      const n    = toks.length;
+      const seen = new Set([r.name.toLowerCase()]);
+      const thr  = r.name.length <= 4 ? 80 : 75;
+      const variants = [];
+
+      const subs = [];
+      for (let len = n-1; len >= 2; len--)
+        for (let s = 0; s <= n-len; s++)
+          subs.push(toks.slice(s, s+len));
+
+      for (const sub of subs) {
+        if (variants.length >= maxVar) break;
+        for (let i = 0; i < sub.length; i++) {
+          if (variants.length >= maxVar) break;
+          for (const fn of [null, ...SPELL_MUTS]) {
+            const m = [...sub];
+            if (fn) { m[i] = fn(sub[i]); if (m[i]===sub[i]) continue; }
+            const v = m.join(' ').toUpperCase();
+            if (!seen.has(v.toLowerCase()) && fullSim(m.join(' '), r.name, thr) >= thr) {
+              seen.add(v.toLowerCase()); variants.push(v);
+              if (fn===null) break;
+              if (variants.length >= maxVar) break;
+            }
+          }
+        }
+      }
+
+      variants.forEach(v => rows.push(mkRow(seq++, '4 - Partial Name', v, r.ref, r.name)));
+    });
+  return rows;
+}
+
+/* ─────────────────────────────────────────────
+/* ─────────────────────────────────────────────
+   ID NORMALIZER
+   Faithful JS port of id_normalizer.py from name_matching_core.
+   Logic: strip brackets, tokenize on [A-Z0-9]+, walk tokens building
+   prefix (short non-English alpha) then ID body (starts at first digit token).
+───────────────────────────────────────────── */
+
+// Noise tokens — always discarded regardless of position
+const ID_NOISE = new Set([
+  'DOC','DOCUMENT','PASSPORT','NO','NUMBER','ID','REF','REFERENCE','TEXT','NOTE'
+]);
+
+// English words derived from zipf_frequency >= 4.5 (or len>=5 and zipf>=3.0)
+// that appear in UN XML ID strings — these are filtered the same way as Python's
+// is_english_word(). Single-char tokens are NEVER in this set (never filtered).
+const ID_ENGLISH = new Set([
+  'AFGHAN','AFRICAN','AL','ALIEN','AM','ARMED','AS','AT','BRITISH','CAR','CARD',
+  'CENTRAL','CONGO','COUNTERFEIT','DA','DANISH','DIPLOMATIC','DOCUMENT','DRIVING',
+  'FORCES','FOREIGN','FRENCH','GERMAN','IDENTIFICATION','IDENTITY','INDONESIA',
+  'JORDAN','LIBYA','LIBYAN','LICENCE','MILITARY','MM','NATIONAL','NO','NUMBER',
+  'OR','PAKISTANI','PASSER','PASSPORT','PROVISIONAL','QATAR','REGISTRATION',
+  'REPUBLIC','RUSSIAN','SECURITY','SERVICE','SOCIAL','SOUTH','SUDAN','TRAVEL','YEMENI'
+]);
+
+function isEnglishWord(t) {
+  if (t.length === 1) return false;   // single chars never filtered (per Python code)
+  return ID_ENGLISH.has(t);
+}
+
+function normalizeID(raw) {
+  if (!raw) return '';
+
+  let s = raw.toUpperCase();
+
+  // Remove bracketed content: (Expired ...), (FACA), (US), etc.
+  s = s.replace(/\(.*?\)/g, '');
+
+  // Tokenize: extract runs of A-Z and 0-9 only
+  const tokens = s.match(/[A-Z0-9]+/g);
+  if (!tokens) return '';
+
+  let result = '';
+  let prefix  = '';
+  let started = false;
+
+  for (const t of tokens) {
+    const hasDigit = /\d/.test(t);
+    const hasAlpha = /[A-Z]/.test(t);
+
+    if (!started) {
+      // ── Before the ID starts ──────────────────────────────
+      if (hasAlpha && !hasDigit) {
+        // Discard noise tokens and English words (but not single chars)
+        if (ID_NOISE.has(t) || isEnglishWord(t)) continue;
+        // Collect short non-English alpha tokens as prefix (≤3 chars)
+        if (t.length <= 3) prefix += t;
+        continue;
+      }
+      if (hasDigit) {
+        // Skip alphanumeric tokens that are English words
+        if (hasAlpha && isEnglishWord(t)) continue;
+        // First digit-containing token starts the ID
+        result  = prefix + t;
+        started = true;
+      }
+      continue;
+    }
+
+    // ── After the ID has started ─────────────────────────────
+    if (hasDigit) {
+      result += t;
+      continue;
+    }
+    if (hasAlpha) {
+      // English words and noise tokens stop the ID
+      if (ID_NOISE.has(t) || isEnglishWord(t)) break;
+      result += t;
+      continue;
+    }
+    break;
+  }
+
+  return result;
+}
+
+let idCSV = null;
+
+function generateIDList() {
+  if (!sanctionsData) return;
+  const btn = document.getElementById('btn-idlist');
+  btn.disabled = true; btn.textContent = 'Generating…';
+  document.getElementById('stat-idlist').textContent = '';
+
+  setTimeout(() => {
+    try {
+      const rows = [];
+      let seq = 1;
+      sanctionsData.ids.forEach(({ ref, raw }) => {
+        const cleaned = normalizeID(raw);
+        if (cleaned) {
+          rows.push({ '#': seq++, SanctionRef: ref, RawID: raw, CleanedID: cleaned });
+        }
+      });
+
+      const fields = ['#', 'SanctionRef', 'RawID', 'CleanedID'];
+      const lines = [fields.join(',')];
+      rows.forEach(r => lines.push(fields.map(k => csvEsc(r[k])).join(',')));
+      idCSV = lines.join('\r\n');
+
+      document.getElementById('stat-idlist').textContent =
+        rows.length.toLocaleString() + ' IDs extracted from ' + sanctionsData.ids.length.toLocaleString() + ' raw entries';
+      document.getElementById('dl-idlist').style.display = 'inline-flex';
+    } catch (e) {
+      document.getElementById('stat-idlist').textContent = 'Error: ' + e.message;
+    }
+    btn.disabled = false; btn.textContent = 'Regenerate';
+  }, 10);
+}
+
+function downloadIDList() {
+  if (!idCSV) return;
+  const b = new Blob([idCSV], { type: 'text/csv;charset=utf-8' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(b);
+  a.download = 'UN_Sanctions_ID_List.csv'; a.click();
+}
+
+/* ─────────────────────────────────────────────
+   TAB SWITCHING
+───────────────────────────────────────────── */
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active', (i===0&&tab==='un')||(i===1&&tab==='local')));
+  document.getElementById('tab-un').classList.toggle('active', tab==='un');
+  document.getElementById('tab-local').classList.toggle('active', tab==='local');
+}
+
+/* ─────────────────────────────────────────────
+   LOCAL LIST — DATA & PARSING
+───────────────────────────────────────────── */
+const localData = { individuals: null, entities: null };
+const localCSVs = {};
+
+const AKA_RE = /\s+a[\s.,]*k[\s.,]*a[\s.,]*\s+/gi;
+const OR_RE  = /\s+or\s+/gi;
+
+function splitLocalNames(raw) {
+  if (!raw) return [];
+  let s = raw.trim();
+  // Strip long parentheticals (>20 chars = descriptive, not a name)
+  s = s.replace(/\([^)]{20,}\)/g, '');
+  s = s.replace(/\s+/g, ' ').trim();
+  const parts = s.split(AKA_RE);
+  const final = [];
+  for (const p of parts) {
+    for (const sub of p.split(OR_RE)) {
+      const cleaned = sub.trim().replace(/\s+/g, ' ').replace(/\.+$/, '').trim();
+      if (cleaned) final.push(cleaned);
+    }
+  }
+  return final;
+}
+
+function isNA(val) {
+  if (val === null || val === undefined) return true;
+  return String(val).trim().toUpperCase().match(/^(NA|N\/A|N\.A\.?|-)$/) !== null;
+}
+
+function normalizeLocalID(raw) {
+  let s = String(raw).trim();
+  // Strip country/label parentheticals (non-ID content)
+  s = s.replace(/\(([^)]+)\)/g, (m, inner) => {
+    inner = inner.trim();
+    // Keep if inner looks like an ID (has digits and is short alphanumeric)
+    if (/\d/.test(inner) && /^[A-Z0-9\s\-\/]+$/i.test(inner) && inner.length < 20) return m;
+    return '';
+  });
+  s = s.replace(/\s+/g, ' ').trim().toUpperCase();
+  // Remove internal spaces
+  s = s.replace(/\s/g, '');
+  return s || null;
+}
+
+function splitAndNormalizeLocalIDs(cellVal) {
+  if (isNA(cellVal)) return [];
+  const raw = String(cellVal);
+  const parts = raw.split(/[,\n]+/);
+  const result = [];
+  for (let p of parts) {
+    p = p.trim();
+    if (!p || isNA(p)) continue;
+    const norm = normalizeLocalID(p);
+    if (norm) result.push(norm);
+  }
+  return result;
+}
+
+/* ─────────────────────────────────────────────
+   LOCAL LIST — EXCEL READER (via SheetJS CDN)
+───────────────────────────────────────────── */
+function loadSheetJS(cb) {
+  if (window.XLSX) { cb(); return; }
+  const s = document.createElement('script');
+  s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+  s.onload = cb;
+  s.onerror = () => { document.getElementById('local-meta').innerHTML = '<span class="pill pill-err">&#9888; Failed to load Excel library — check internet connection</span>'; };
+  document.head.appendChild(s);
+}
+
+function handleLocalFile(input, type) {
+  const file = input.files[0]; if (!file) return;
+  const statusEl = document.getElementById(type === 'ind' ? 'ind-status' : 'ent-status');
+  statusEl.textContent = 'Loading…';
+  loadSheetJS(() => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      try {
+        const wb = XLSX.read(e.target.result, { type: 'array', cellDates: true });
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: null });
+        if (type === 'ind') parseIndividuals(rows);
+        else                parseEntities(rows);
+        updateLocalMeta();
+      } catch(err) {
+        statusEl.textContent = 'Error: ' + err.message;
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+function parseIndividuals(rows) {
+  // Find header row by looking for 'Name' column, then parse data rows after it
+  let dataStart = -1;
+  let colRef = 1, colName = 2, colDL = 5, colNIC = 6;
+  for (let i = 0; i < Math.min(rows.length, 5); i++) {
+    const r = rows[i];
+    if (r && r.some(c => String(c||'').trim().toUpperCase() === 'NAME')) {
+      dataStart = i + 1;
+      // Find column indices dynamically
+      r.forEach((c, idx) => {
+        const v = String(c||'').toUpperCase().trim().replace(/\s+/g,' ');
+        if (v === 'REFERENCE NUMBER' || v === 'REFERENCE  NUMBER') colRef = idx;
+        if (v === 'NAME') colName = idx;
+        if (v.includes('DL') || v.includes('PASSPORT')) colDL = idx;
+        if (v.includes('NIC')) colNIC = idx;
+      });
+      break;
+    }
+  }
+  if (dataStart < 0) dataStart = 2; // fallback
+
+  const data = [];
+  for (let i = dataStart; i < rows.length; i++) {
+    const row = rows[i];
+    if (!row || !row[colName]) continue;
+    const ref  = row[colRef];
+    const name = row[colName];
+    const dl   = row[colDL];
+    const nic  = row[colNIC];
+    const names = splitLocalNames(String(name));
+    const dls   = splitAndNormalizeLocalIDs(dl);
+    const nics  = splitAndNormalizeLocalIDs(nic);
+    if (names.length > 0) data.push({ ref: String(ref||'').trim(), names, dls, nics });
+  }
+  localData.individuals = data;
+  document.getElementById('ind-status').textContent = `✓ ${data.length} individuals loaded`;
+  ['btn-lcat1','btn-lcat2','btn-lcat3','btn-lcat4','btn-lcat5','btn-lidlist'].forEach(id => {
+    const b = document.getElementById(id); if (b) b.disabled = false;
+  });
+}
+
+function parseEntities(rows) {
+  let dataStart = -1;
+  let colRef = 1, colName = 2, colReg = 4;
+  for (let i = 0; i < Math.min(rows.length, 5); i++) {
+    const r = rows[i];
+    if (r && r.some(c => String(c||'').trim().toUpperCase() === 'NAME')) {
+      dataStart = i + 1;
+      r.forEach((c, idx) => {
+        const v = String(c||'').toUpperCase().trim().replace(/\s+/g,' ');
+        if (v === 'REFERENCE NUMBER') colRef = idx;
+        if (v === 'NAME') colName = idx;
+        if (v.includes('REGISTRATION')) colReg = idx;
+      });
+      break;
+    }
+  }
+  if (dataStart < 0) dataStart = 2;
+
+  const data = [];
+  for (let i = dataStart; i < rows.length; i++) {
+    const row = rows[i];
+    if (!row || !row[colName]) continue;
+    const ref  = row[colRef];
+    const name = row[colName];
+    const reg  = row[colReg];
+    const names = splitLocalNames(String(name));
+    const regs = [];
+    if (!isNA(reg)) {
+      String(reg).split(',').forEach(p => {
+        p = p.replace(/\(\d{2}\.\d{2}\.\d{4}\)/g,'').replace(/\([^)]{10,}\)/g,'').trim().replace(/\.+$/,'').trim();
+        if (p) regs.push(p);
+      });
+    }
+    if (names.length > 0) data.push({ ref: String(ref||'').trim(), names, regs });
+  }
+  localData.entities = data;
+  document.getElementById('ent-status').textContent = `✓ ${data.length} entities loaded`;
+  ['btn-lcat1','btn-lcat2','btn-lcat3','btn-lcat4','btn-lcat5'].forEach(id => {
+    const b = document.getElementById(id); if (b) b.disabled = false;
+  });
+}
+
+function updateLocalMeta() {
+  const ind = localData.individuals ? localData.individuals.length : 0;
+  const ent = localData.entities   ? localData.entities.length    : 0;
+  const indNames = localData.individuals ? localData.individuals.reduce((s,r)=>s+r.names.length,0) : 0;
+  const entNames = localData.entities   ? localData.entities.reduce((s,r)=>s+r.names.length,0)   : 0;
+  if (!ind && !ent) return;
+  let parts = [];
+  if (ind) parts.push(`${ind} individuals (${indNames} names)`);
+  if (ent) parts.push(`${ent} entities (${entNames} names)`);
+  document.getElementById('local-meta').innerHTML =
+    `<span class="pill pill-ok">&#10003; Local list loaded</span><span>${parts.join(' &nbsp;·&nbsp; ')}</span>`;
+}
+
+/* ─────────────────────────────────────────────
+   LOCAL LIST — GENERATORS
+───────────────────────────────────────────── */
+function generateLocal(cat) {
+  const key = cat === 'id' ? 'idlist' : 'cat' + cat;
+  const btn = document.getElementById('btn-l' + key);
+  btn.disabled = true; btn.textContent = 'Generating…';
+  document.getElementById('stat-l' + key).textContent = '';
+  setTimeout(() => {
+    try {
+      const maxVar = (cat===1||cat===5) ? 999 : parseInt(document.getElementById('sel-lcat'+cat)?.value||'5');
+      let rows;
+      if      (cat === 1)    rows = genLocalCat1();
+      else if (cat === 2)    rows = genLocalCat2(maxVar);
+      else if (cat === 3)    rows = genLocalCat3(maxVar);
+      else if (cat === 4)    rows = genLocalCat4(maxVar);
+      else if (cat === 5)    rows = genLocalCat5();
+      else if (cat === 'id') rows = genLocalIDList();
+      localCSVs[cat] = toCSV(rows);
+      document.getElementById('stat-l' + key).textContent = rows.length.toLocaleString() + ' rows generated';
+      document.getElementById('dl-l' + key).style.display = 'inline-flex';
+    } catch(e) {
+      document.getElementById('stat-l' + key).textContent = 'Error: ' + e.message;
+    }
+    btn.disabled = false; btn.textContent = 'Regenerate';
+  }, 10);
+}
+
+function downloadLocal(cat) {
+  const csv = localCSVs[cat]; if (!csv) return;
+  const nm = { 1:'Cat1_Exact_Match', 2:'Cat2_Spelling_Variant', 3:'Cat3_Transposed',
+               4:'Cat4_Partial_Name', 5:'Cat5_Diacritics', id:'ID_List' };
+  const b = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(b);
+  a.download = 'Local_1373_' + nm[cat] + '.csv'; a.click();
+}
+
+function localPrimaryNames() {
+  // Returns all names (primary + aliases) with ≥2 tokens — single-token names
+  // are included in Cat 1 (exact match) but excluded here since the scorer
+  // caps single-token comparisons below matching thresholds.
+  const out = [];
+  if (localData.individuals) for (const r of localData.individuals)
+    for (const name of r.names)
+      if (name.trim().split(/\s+/).length >= 2) out.push({ name, ref: r.ref });
+  if (localData.entities) for (const r of localData.entities)
+    for (const name of r.names)
+      if (name.trim().split(/\s+/).length >= 2) out.push({ name, ref: r.ref });
+  return out;
+}
+
+function genLocalCat1() {
+  const rows = []; let seq = 1;
+  if (localData.individuals) for (const r of localData.individuals)
+    for (const n of r.names) rows.push(mkRow(seq++, '1 - Exact Match', n, r.ref, r.names[0]));
+  if (localData.entities) for (const r of localData.entities)
+    for (const n of r.names) rows.push(mkRow(seq++, '1 - Exact Match', n, r.ref, r.names[0]));
+  return rows;
+}
+
+function genLocalCat2(maxVar) {
+  const rows = []; let seq = 1;
+  for (const { name, ref } of localPrimaryNames()) {
+    const toks = name.toLowerCase().split(' ').filter(Boolean);
+    if (toks.length < 2) continue;
+    const seen = new Set([name.toLowerCase()]);
+    const thr = name.length <= 4 ? 80 : 75;
+    const variants = [];
+    const strats = [
+      t=>{const c=[...t];c[0]=vswap(c[0]);return c[0]!==toks[0]?c:null;},
+      t=>{const c=[...t];c[c.length-1]=vswap(c[c.length-1]);return c[c.length-1]!==toks[toks.length-1]?c:null;},
+      t=>{const c=t.map(dropDbl);return c.join('|')!==t.join('|')?c:null;},
+      t=>{const c=[...t];for(let i=c.length-1;i>=0;i--){if(!HIGH_FREQ.has(c[i])){const n=addDbl(c[i]);if(n!==c[i]){c[i]=n;return c;}}}return null;},
+      t=>{const c=t.map(ckSw);return c.join('|')!==t.join('|')?c:null;},
+      t=>{const c=[...t];for(let i=c.length-1;i>=0;i--){if(c[i].length>3){const n=endCh(c[i]);if(n!==c[i]){c[i]=n;return c;}}}return null;},
+      t=>{const c=[...t];c[0]=vswap(c[0],1);return c[0]!==toks[0]?c:null;},
+      t=>{if(t.length<2)return null;const c=[...t];c[1]=vswap(c[1]);return c[1]!==toks[1]?c:null;},
+      t=>{const c=[...t];c[c.length-1]=insV(c[c.length-1]);return c[c.length-1]!==toks[toks.length-1]?c:null;},
+    ];
+    for (const s of strats) {
+      if (variants.length >= maxVar) break;
+      const res = s(toks); if (!res) continue;
+      const v = res.join(' ');
+      if (seen.has(v)) continue;
+      if (fullSim(v, name, thr) >= thr) { seen.add(v); variants.push(v.toUpperCase()); }
+    }
+    if (variants.length < maxVar) {
+      const nl = name.toLowerCase();
+      for (const [a, b] of [['a','e'],['e','i'],['i','a'],['o','u'],['n','m'],['s','z']]) {
+        if (variants.length >= maxVar) break;
+        for (let i = 0; i < nl.length; i++) {
+          if (nl[i] === a) {
+            const v = nl.slice(0,i)+b+nl.slice(i+1);
+            if (!seen.has(v) && fullSim(v, name, thr) >= thr) { seen.add(v); variants.push(v.toUpperCase()); break; }
+          }
+        }
+      }
+    }
+    variants.forEach(v => rows.push(mkRow(seq++, '2 - Spelling Variant', v, ref, name)));
+  }
+  return rows;
+}
+
+function genLocalCat3(maxVar) {
+  const rows = []; let seq = 1;
+  for (const { name, ref } of localPrimaryNames()) {
+    const toks = name.toLowerCase().split(' ').filter(Boolean);
+    if (toks.length < 2) continue;
+    const seen = new Set([name.toLowerCase()]);
+    const thr = name.length <= 4 ? 80 : 75;
+    const variants = [];
+    const trans = [];
+    const rev = [...toks].reverse(); if (rev.join('|')!==toks.join('|')) trans.push(rev);
+    if (toks.length>=2){const c=[...toks];[c[0],c[1]]=[c[1],c[0]];if(c.join('|')!==toks.join('|'))trans.push(c);}
+    if (toks.length>=3){trans.push([...toks.slice(1),toks[0]]);trans.push([toks[toks.length-1],...toks.slice(0,-1)]);}
+    for (const tr of trans) {
+      if (variants.length >= maxVar) break;
+      const dI = tr.map((t,i)=>HIGH_FREQ.has(t)||t.length<=3?-1:i).filter(i=>i>=0);
+      const idxs = dI.length ? dI : tr.map((_,i)=>i);
+      for (const i of idxs) {
+        if (variants.length >= maxVar) break;
+        for (const j of idxs) {
+          if (i===j||variants.length>=maxVar) continue;
+          for (const f1 of SPELL_MUTS) {
+            if (variants.length>=maxVar) break;
+            for (const f2 of SPELL_MUTS) {
+              const c=[...tr];c[i]=f1(tr[i]);c[j]=f2(tr[j]);
+              if(c[i]===tr[i]||c[j]===tr[j]) continue;
+              const v=c.join(' ');
+              if(!seen.has(v)){const s=fullSim(v,name,thr);if(s>=thr&&s<=98){seen.add(v);variants.push(v.toUpperCase());break;}}
+            }
+          }
+        }
+      }
+      for (const i of idxs) {
+        if (variants.length>=maxVar) break;
+        for (const fn of SPELL_MUTS) {
+          const c=[...tr];c[i]=fn(tr[i]);if(c[i]===tr[i]) continue;
+          const v=c.join(' ');
+          if(!seen.has(v)){const s=fullSim(v,name,thr);if(s>=thr&&s<=98){seen.add(v);variants.push(v.toUpperCase());break;}}
+        }
+      }
+    }
+    variants.forEach(v => rows.push(mkRow(seq++, '3 - Name Order Transposed', v, ref, name)));
+  }
+  return rows;
+}
+
+function genLocalCat4(maxVar) {
+  const rows = []; let seq = 1;
+  for (const { name, ref } of localPrimaryNames()) {
+    const toks = name.toLowerCase().split(' ').filter(Boolean);
+    const n = toks.length;
+    if (n < 2) continue;
+    const seen = new Set([name.toLowerCase()]);
+    const thr = name.length <= 4 ? 80 : 75;
+    const variants = [];
+    const subs = [];
+    for (let len = n-1; len >= 2; len--)
+      for (let s = 0; s <= n-len; s++) subs.push(toks.slice(s, s+len));
+    for (const sub of subs) {
+      if (variants.length >= maxVar) break;
+      for (let i = 0; i < sub.length; i++) {
+        if (variants.length >= maxVar) break;
+        for (const fn of [null,...SPELL_MUTS]) {
+          const m=[...sub];if(fn){m[i]=fn(sub[i]);if(m[i]===sub[i])continue;}
+          const v=m.join(' ');
+          if(!seen.has(v)&&fullSim(v,name,thr)>=thr){seen.add(v);variants.push(v.toUpperCase());if(fn===null)break;if(variants.length>=maxVar)break;}
+        }
+      }
+    }
+    variants.forEach(v => rows.push(mkRow(seq++, '4 - Partial Name', v, ref, name)));
+  }
+  return rows;
+}
+
+function genLocalCat5() {
+  const rows = []; let seq = 1;
+  for (const { name, ref } of localPrimaryNames()) {
+    const norm = normName(name);
+    if (norm !== name.toUpperCase() && norm.trim().length > 2)
+      rows.push(mkRow(seq++, '5 - Diacritics/Special Chars', norm, ref, name));
+  }
+  return rows;
+}
+
+function genLocalCat6(maxVar) {
+  const rows = []; let seq = 1;
+  for (const { name, ref } of localPrimaryNames()) {
+    const toks = name.toLowerCase().split(' ').filter(Boolean);
+    if (toks.length < 2) continue;
+    const seen = new Set([name.toLowerCase()]);
+    const thr = name.length <= 4 ? 80 : 75;
+    const variants = [];
+    for (let i = 0; i < toks.length; i++) {
+      if (variants.length >= maxVar) break;
+      for (const fn of OCR_MUTS) {
+        const c=[...toks];c[i]=fn(toks[i]);if(c[i]===toks[i])continue;
+        const v=c.join(' ');
+        if(!seen.has(v)&&fullSim(v,name,thr)>=thr){seen.add(v);variants.push(v.toUpperCase());if(variants.length>=maxVar)break;}
+      }
+    }
+    if (variants.length < maxVar) {
+      for (let i=0;i<toks.length&&variants.length<maxVar;i++) {
+        for (let j=0;j<toks.length&&variants.length<maxVar;j++) {
+          if(i===j)continue;
+          for(const f1 of OCR_MUTS){if(variants.length>=maxVar)break;for(const f2 of OCR_MUTS){const c=[...toks];c[i]=f1(toks[i]);c[j]=f2(toks[j]);if(c[i]===toks[i]||c[j]===toks[j])continue;const v=c.join(' ');if(!seen.has(v)&&fullSim(v,name,thr)>=thr){seen.add(v);variants.push(v.toUpperCase());if(variants.length>=maxVar)break;}}}
+        }
+      }
+    }
+    if (variants.length < maxVar && toks.length >= 2) {
+      for (let s=0;s<toks.length-1&&variants.length<maxVar;s++) {
+        const m=[...toks];m[s]=m[s]+m[s+1];m.splice(s+1,1);
+        const v=m.join(' ');
+        if(!seen.has(v)&&fullSim(v,name,thr)>=thr){seen.add(v);variants.push(v.toUpperCase());}
+      }
+    }
+    variants.forEach(v => rows.push(mkRow(seq++, '6 - OCR/Typo Stress', v, ref, name)));
+  }
+  return rows;
+}
+
+function genLocalIDList() {
+  const rows = []; let seq = 1;
+  if (!localData.individuals) return rows;
+  for (const r of localData.individuals)
+    for (const id of [...r.dls, ...r.nics])
+      rows.push(mkRow(seq++, 'ID Match', id, r.ref, r.names[0]));
+  return rows;
+}
+
+
+/* ─────────────────────────────────────────────
+   INIT
+───────────────────────────────────────────── */
+renderCards();
+</script>
+</body>
+</html>
