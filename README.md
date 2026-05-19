@@ -62,6 +62,12 @@ Feed generated CSV into any automated testing script such as Playwright:
 
 ---
 
+## Developer
+
+[Kosala Herath](https://www.linkedin.com/in/your-profile) — Financial Intelligence Unit Strengthening Project, Maldives (UNODC)
+
+---
+
 ## License
 
 MIT License — free to use, modify, and distribute.
