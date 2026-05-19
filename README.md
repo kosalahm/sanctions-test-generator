@@ -64,7 +64,7 @@ Feed generated CSV into any automated testing script such as Playwright:
 
 ## Developer
 
-[Kosala Harshadewa](https://www.linkedin.com/in/kosala-harshadewa) — Financial Intelligence Unit Strengthening Project, Maldives (UNODC)
+[Kosala Harshadewa](https://www.linkedin.com/in/kosala-harshadewa)
 
 ---
 
